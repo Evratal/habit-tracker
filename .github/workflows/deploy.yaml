@@ -84,11 +84,24 @@ jobs:
       IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
-
+      - name: Validate SSH Key
+        run: |
+          echo "Checking SSH key format..."
+          echo "${{ secrets.SSH_KEY }}" > key
+          chmod 600 key
+          ssh-keygen -lf key
+          rm -f key
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
+      - name: Test SSH Connection
+        run: |
+          ssh -vvv -T -o StrictHostKeyChecking=no \
+              -o IdentitiesOnly=yes \
+              -i <(echo "${{ secrets.SSH_KEY }}") \
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
+              echo "Connection successful"
 
       - name: Verify connection
         run: ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} hostname
