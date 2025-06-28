@@ -28,4 +28,3 @@ class HabitSerializer(serializers.ModelSerializer):
             )
 
         return data
-

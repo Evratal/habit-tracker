@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from users.models import User
 
+
 class Habit(models.Model):
     DAILY = 1
     WEEKLY = 7

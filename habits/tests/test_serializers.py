@@ -1,8 +1,7 @@
 from rest_framework.test import APITestCase
 from habits.serializers import HabitSerializer
-from habits.models import Habit
 from users.models import User
-import datetime
+
 
 class HabitSerializerTestCase(APITestCase):
     def setUp(self):

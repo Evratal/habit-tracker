@@ -4,6 +4,7 @@ from users.models import User
 from habits.models import Habit
 import datetime
 
+
 class HabitModelTestCase(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(

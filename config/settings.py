@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from django.conf.global_settings import AUTH_USER_MODEL, MEDIA_URL, MEDIA_ROOT
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,7 +32,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'drf_yasg',
-    #'django_filters',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -115,10 +114,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.User"
 
 REST_FRAMEWORK = {
-#    "DEFAULT_FILTER_BACKENDS": [
-#        "django_filters.rest_framework.DjangoFilterBackend",
-#        "rest_framework.filters.OrderingFilter",
-#    ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
@@ -147,7 +142,7 @@ STRIPE_API_KEY = 'pk_test_51RPsNqCDxK5UPEVDMEMkLe8OD9C4q26N8N20f3KjOrZWWWt9ddKa6
 # Настройки для Celery
 
 # URL-адрес брокера сообщений
-CELERY_BROKER_URL = 'redis://localhost:6379' # Например, Redis, который по умолчанию работает на порту 6379
+CELERY_BROKER_URL = 'redis://localhost:6379'  # Например, Redis, который по умолчанию работает на порту 6379
 
 # URL-адрес брокера результатов, также Redis
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
@@ -213,4 +208,3 @@ AUTHENTICATION_BACKENDS = [
 # Telegram
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_WEBHOOK_URL = os.getenv('TELEGRAM_WEBHOOK_URL', '')
-

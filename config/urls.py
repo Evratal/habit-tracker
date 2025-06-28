@@ -39,5 +39,4 @@ urlpatterns = [
     path('api/habits/', include('habits.urls')),
     path('api/telegram/', include('telegram_bot.urls')),
 
-
 ]
