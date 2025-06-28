@@ -218,7 +218,7 @@ if TESTING:
 if 'test' in sys.argv or os.getenv('USE_SQLITE_FOR_TESTS'):
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(os.path.dirname(__file__), 'db.sqlite3') if not 'test' in sys.argv else ':memory:'
+        'NAME': os.path.join(os.path.dirname(__file__), 'db.sqlite3') if 'test' not in sys.argv else ':memory:'
     }
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
