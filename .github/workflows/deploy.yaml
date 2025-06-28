@@ -54,17 +54,11 @@ jobs:
           pip install -r requirements.txt
       - name: Run tests
         env:
-          DJANGO_SETTINGS_MODULE: config.settings
-          USE_SQLITE: 'true'
+          SECRET_KEY: 'django-insecure-test-key-123'
+          USE_SQLITE_FOR_TESTS: 'true'  # Принудительно используем SQLite
         run: |
-          # Создаем тестовую БД
           python manage.py migrate --noinput
-          
-          # Запускаем тесты
           python manage.py test --noinput
-          
-          # Очищаем после тестов
-          python manage.py flush --noinput
 
   build:
     needs: test
