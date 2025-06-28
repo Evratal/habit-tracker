@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 from users.models import User
-from habits.models import Habit
+from ..models import Habit
 import datetime
 
 

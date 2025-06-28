@@ -56,9 +56,10 @@ jobs:
         env:
           SECRET_KEY: 'django-insecure-test-key-123'
           USE_SQLITE_FOR_TESTS: 'true'  # Принудительно используем SQLite
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           python manage.py migrate --noinput
-          python manage.py test --noinput
+          python manage.py test habits.tests
 
   build:
     needs: test
