@@ -80,42 +80,33 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    env:
+      IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
-      - name: Validate environment
-        run: |
-          echo "Docker Image: ${{ env.DOCKER_IMAGE }}"
-          echo "Commit SHA: ${{ env.DOCKER_TAG }}"
 
-      - uses: webfactory/ssh-agent@v0.9.0
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Deploy to production
+      - name: Verify connection
+        run: ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} hostname
+
+      - name: Deploy
         run: |
-          ssh -o StrictHostKeyChecking=no \
-              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'DEPLOY'
+          ssh -T -o StrictHostKeyChecking=no \
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
           #!/bin/bash
           set -e
-          
-          echo "=== Pulling new image ==="
-          docker pull ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-          
-          echo "=== Stopping existing container ==="
+          docker pull $IMAGE
           docker stop myapp || true
           docker rm myapp || true
-          
-          echo "=== Starting new container ==="
           docker run -d \
             --name myapp \
             --restart unless-stopped \
             -p 80:8000 \
-            -v /path/to/static:/app/staticfiles \
-            -v /path/to/media:/app/media \
-            -e DJANGO_SETTINGS_MODULE=core.settings.production \
-            -e SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} \
-            ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-            
-          echo "=== Cleanup ==="
-          docker image prune -af
-          DEPLOY
+            -v /data:/app/data \
+            -e SECRET_KEY="${{ secrets.DJANGO_SECRET_KEY }}" \
+            $IMAGE
+          EOF
