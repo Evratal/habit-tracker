@@ -55,6 +55,7 @@ jobs:
       - name: Run tests
         env:
           DJANGO_SETTINGS_MODULE: config.settings
+          USE_SQLITE: 'true'
         run: |
           # Создаем тестовую БД
           python manage.py migrate --noinput
