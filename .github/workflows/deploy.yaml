@@ -10,7 +10,6 @@ env:
   DOCKER_IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp
   DOCKER_TAG: ${{ github.sha }}
   DJANGO_SETTINGS_MODULE: config.settings
-  SECRET_KEY: os.getenv("SECRET_KEY")
 
 jobs:
   lint:
@@ -72,8 +71,10 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Build and push
+        env:
+          SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
         run: |
-          docker build -t ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} .
+          docker build --build-arg SECRET_KEY=$SECRET_KEY -t ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} .
           docker push ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
 
   deploy:
