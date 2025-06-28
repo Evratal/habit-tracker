@@ -27,7 +27,7 @@ RUN mkdir -p /app/staticfiles /app/media \
     && chmod -R 755 /app/staticfiles /app/media
 
 # Запуск миграций и сборки статики (опционально)
-RUN python manage.py collectstatic --noinput
+RUN if [ "$COLLECTSTATIC" = "true" ]; then python manage.py collectstatic --noinput; fi
 
 # Пользователь для безопасности
 USER 1000
@@ -35,3 +35,7 @@ USER 1000
 # Порт и команда запуска
 EXPOSE 8000
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
+
+ARG SECRET_KEY
+ENV SECRET_KEY=$SECRET_KEY
+
