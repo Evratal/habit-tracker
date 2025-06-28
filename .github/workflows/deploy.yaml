@@ -53,7 +53,7 @@ jobs:
       - name: Run tests
         env:
           DATABASE_URL: postgres://test:test@postgres:5432/test
-          DJANGO_SETTINGS_MODULE: core.settings.test
+          DJANGO_SETTINGS_MODULE: config.settings.test
         run: |
           python manage.py test --noinput
 
