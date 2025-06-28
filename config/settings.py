@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
 
@@ -208,3 +209,8 @@ AUTHENTICATION_BACKENDS = [
 # Telegram
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_WEBHOOK_URL = os.getenv('TELEGRAM_WEBHOOK_URL', '')
+
+TESTING = 'test' in sys.argv
+
+if TESTING:
+    TELEGRAM_BOT_TOKEN = None  # Отключаем бота для тестов
