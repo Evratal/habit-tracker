@@ -5,7 +5,7 @@ from users.models import User
 
 class HabitSerializerTestCase(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(email='user@example.com', password='pass123')
+        self.user = User.objects.create_user(username='serializertestuser', email='user@example.com', password='pass123')
         self.valid_data = {
             'action': 'Зарядка',
             'place': 'Дом',

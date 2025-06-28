@@ -8,6 +8,7 @@ import datetime
 class HabitModelTestCase(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
+            username='testuser',
             email='test@example.com',
             password='testpass123'
         )
@@ -68,11 +69,12 @@ class HabitModelTestCase(TestCase):
             habit.full_clean()
 
     def test_habit_str_representation(self):
-        """Проверка строкового представления"""
         habit = Habit.objects.create(
             user=self.user,
             action="Пить воду",
-            time=datetime.time(10, 0)
+            time=datetime.time(10, 0),
+            duration=60,
+            place="Кухня"
         )
         self.assertIn("Пить воду", str(habit))
-        self.assertIn("test@example.com", str(habit))
+        self.assertIn(self.user.email, str(habit))
