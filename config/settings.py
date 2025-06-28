@@ -214,3 +214,12 @@ TESTING = 'test' in sys.argv
 
 if TESTING:
     TELEGRAM_BOT_TOKEN = None  # Отключаем бота для тестов
+
+if 'test' in sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:'
+    }
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
