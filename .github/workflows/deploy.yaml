@@ -80,38 +80,23 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    env:
-      IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Setup SSH
+      - name: Deploy to server
         run: |
-          mkdir -p ~/.ssh
-          # Сохраняем ключ с правильными переносами строк
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-
-          # Добавляем fingerprint сервера
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} > ~/.ssh/known_hosts
-
-      - name: Verify SSH connection
-        run: |
-          ssh -vvv -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
-              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
-              "echo 'SSH verification successful'"
-
-      - name: Deploy with fixed config
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-
-          ssh -vvv -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
-              -o IdentitiesOnly=yes \
+          ssh -o StrictHostKeyChecking=no \
               ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-          echo "=== SSH Connection Established ==="
-          docker pull $IMAGE && docker-compose up -d
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+          docker stop myapp || true
+          docker rm myapp || true
+          docker run -d \
+            --name myapp \
+            -p 80:8000 \
+            -e DJANGO_SECRET_KEY='${{ secrets.DJANGO_SECRET_KEY }}' \
+            ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
           EOF
