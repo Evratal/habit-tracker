@@ -2,12 +2,8 @@ import os
 from telegram import Bot, Update
 from telegram.ext import (
     CommandHandler,
-    MessageHandler,
-    filters,
-    Updater,
     CallbackContext
 )
-from django.conf import settings
 
 from telegram_bot.models import TelegramUser
 from users.models import User

@@ -2,9 +2,6 @@ from telegram import Update
 from telegram.ext import (
     Application,
     CommandHandler,
-    MessageHandler,
-    filters,
-    CallbackQueryHandler,
     ContextTypes
 )
 
@@ -20,6 +17,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def setup_bot():
+    if not hasattr(settings, 'TELEGRAM_BOT_TOKEN') or not settings.TELEGRAM_BOT_TOKEN:
+        return
+
     application = Application.builder().token(settings.TELEGRAM_BOT_TOKEN).build()
 
     # Регистрация обработчиков

@@ -1,8 +1,7 @@
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from .models import Habit
-from .tasks import send_telegram_reminder
-from datetime import datetime, time
+from datetime import datetime
 
 
 @receiver(pre_save, sender=Habit)
