@@ -102,28 +102,16 @@ jobs:
               ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
               "echo 'SSH verification successful'"
 
-      - name: Deploy with PAM workaround
+      - name: Deploy with fixed config
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          
-          ssh -i ~/.ssh/deploy_key \
+
+          ssh -vvv -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
-              -o PreferredAuthentications=publickey \
-              -o GSSAPIAuthentication=no \
+              -o IdentitiesOnly=yes \
               ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-          #!/bin/bash
-          set -e
-          echo "=== Deployment started ==="
-          docker pull $IMAGE
-          docker stop myapp || true
-          docker rm myapp || true
-          docker run -d \
-            --name myapp \
-            -p 80:8000 \
-            -v /data:/app/data \
-            -e SECRET_KEY="${{ secrets.DJANGO_SECRET_KEY }}" \
-            $IMAGE
-          echo "=== Deployment completed ==="
+          echo "=== SSH Connection Established ==="
+          docker pull $IMAGE && docker-compose up -d
           EOF
