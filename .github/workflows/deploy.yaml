@@ -99,7 +99,19 @@ jobs:
           echo "${{ secrets.SERVER_IP }} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKrnueflKsEjLy+eSW3WDMkyHWYx7vTtSUCfBfv8eoiU" > ~/.ssh/known_hosts
 
       - name: Test connection
-        run: ssh -i ~/.ssh/deploy_key evrat_1@${{ secrets.SERVER_IP }} "echo 'Success!'"
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          
+          # Очищаем старый fingerprint и добавляем новый
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} > ~/.ssh/known_hosts
+          
+          # Тестируем подключение
+          ssh -i ~/.ssh/deploy_key \
+           -o StrictHostKeyChecking=accept-new \
+           evrat_1@${{ secrets.SERVER_IP }} \
+           "echo 'SSH connection successful!'"
 
       - name: Verify connection
         run: ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} hostname
