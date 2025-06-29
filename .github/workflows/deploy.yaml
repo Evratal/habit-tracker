@@ -84,52 +84,48 @@ jobs:
       IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
-      - name: Validate SSH Key
-        run: |
-          echo "Checking SSH key format..."
-          echo "${{ secrets.SSH_KEY }}" > key
-          chmod 600 key
-          ssh-keygen -lf key
-          rm -f key
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          # Сохраняем ключ с правильными переносами строк
+          echo "${{ secrets.SSH_KEY }}" | sed 's/\\n/\n/g' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          echo "${{ secrets.SERVER_IP }} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKrnueflKsEjLy+eSW3WDMkyHWYx7vTtSUCfBfv8eoiU" > ~/.ssh/known_hosts
 
-      - name: Test connection
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          
-          # Очищаем старый fingerprint и добавляем новый
+          # Добавляем fingerprint сервера
           ssh-keyscan -H ${{ secrets.SERVER_IP }} > ~/.ssh/known_hosts
-          
-          # Тестируем подключение
-          ssh -i ~/.ssh/deploy_key \
-           -o StrictHostKeyChecking=accept-new \
-           evrat_1@${{ secrets.SERVER_IP }} \
-           "echo 'SSH connection successful!'"
 
-      - name: Verify connection
-        run: ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} hostname
-
-      - name: Deploy
+      - name: Verify SSH connection
         run: |
-          ssh -T -o StrictHostKeyChecking=no \
-              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          ssh -vvv -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
+              "echo 'SSH verification successful'"
+
+      - name: Deploy application
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'DEPLOY'
           #!/bin/bash
           set -e
+          echo "=== Pulling new image ==="
           docker pull $IMAGE
+
+          echo "=== Stopping old container ==="
           docker stop myapp || true
           docker rm myapp || true
+
+          echo "=== Starting new container ==="
           docker run -d \
             --name myapp \
             --restart unless-stopped \
             -p 80:8000 \
             -v /data:/app/data \
             -e SECRET_KEY="${{ secrets.DJANGO_SECRET_KEY }}" \
+            -e DJANGO_SETTINGS_MODULE="config.settings.production" \
             $IMAGE
-          EOF
+
+          echo "=== Cleaning up ==="
+          docker system prune -af
+          DEPLOY
