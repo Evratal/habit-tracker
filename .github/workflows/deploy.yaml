@@ -102,30 +102,28 @@ jobs:
               ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
               "echo 'SSH verification successful'"
 
-      - name: Deploy application
+      - name: Deploy with clean auth
         run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
           ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
-              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'DEPLOY'
+              -o UserKnownHostsFile=/dev/null \
+              -o PreferredAuthentications=publickey \
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
           #!/bin/bash
           set -e
-          echo "=== Pulling new image ==="
+          echo "=== Deployment started ==="
           docker pull $IMAGE
-
-          echo "=== Stopping old container ==="
           docker stop myapp || true
           docker rm myapp || true
-
-          echo "=== Starting new container ==="
           docker run -d \
             --name myapp \
-            --restart unless-stopped \
             -p 80:8000 \
             -v /data:/app/data \
             -e SECRET_KEY="${{ secrets.DJANGO_SECRET_KEY }}" \
-            -e DJANGO_SETTINGS_MODULE="config.settings.production" \
             $IMAGE
-
-          echo "=== Cleaning up ==="
-          docker system prune -af
-          DEPLOY
+          echo "=== Deployment completed ==="
+          EOF
