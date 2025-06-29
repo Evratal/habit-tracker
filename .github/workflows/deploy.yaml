@@ -100,3 +100,4 @@ jobs:
             -e DJANGO_SECRET_KEY='${{ secrets.DJANGO_SECRET_KEY }}' \
             ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
           EOF
+
