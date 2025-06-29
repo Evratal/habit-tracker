@@ -94,16 +94,22 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          # Удаляем возможные лишние символы
+          echo "${{ secrets.SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          # Проверяем формат ключа
+          ssh-keygen -lf ~/.ssh/deploy_key
+          # Добавляем хост в known_hosts
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Test SSH connection
+      - name: Test Connection
         run: |
-          ssh -i ~/.ssh/deploy_key \
-           -o StrictHostKeyChecking=no \
-           ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
-           "echo 'Connection successful!'"
+          ssh -v -i ~/.ssh/deploy_key \
+              -o PreferredAuthentications=publickey \
+              -o PubkeyAuthentication=yes \
+              -o PasswordAuthentication=no \
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
+              "echo 'SSH connection successful!'"
 
       - name: Verify connection
         run: ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} hostname
