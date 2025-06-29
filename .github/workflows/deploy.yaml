@@ -89,7 +89,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           # Сохраняем ключ с правильными переносами строк
-          echo "${{ secrets.SSH_KEY }}" | sed 's/\\n/\n/g' > ~/.ssh/deploy_key
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
           # Добавляем fingerprint сервера
