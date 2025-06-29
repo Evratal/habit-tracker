@@ -102,7 +102,7 @@ jobs:
               ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
               "echo 'SSH verification successful'"
 
-      - name: Deploy with clean auth
+      - name: Deploy with PAM workaround
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
@@ -110,8 +110,8 @@ jobs:
           
           ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=/dev/null \
               -o PreferredAuthentications=publickey \
+              -o GSSAPIAuthentication=no \
               ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
           #!/bin/bash
           set -e
