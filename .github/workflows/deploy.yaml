@@ -104,10 +104,9 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
-              -o UserKnownHostsFile=/dev/null \
               ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-              docker pull ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-              docker-compose up -d
+              cd /путь/к/проекту && \  # ← Добавьте эту строку
+              docker-compose -f docker-compose.prod.yml up -d  # ← Явно укажите файл
           "
 
 
