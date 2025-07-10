@@ -116,4 +116,3 @@ jobs:
             ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
           echo "Deployment completed!"
           EOF
-
