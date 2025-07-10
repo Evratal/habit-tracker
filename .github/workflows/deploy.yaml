@@ -1,104 +1,86 @@
 name: Django CI/CD Pipeline
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-env:
-  DOCKER_IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/myapp
-  DOCKER_TAG: ${{ github.sha }}
-  DJANGO_SETTINGS_MODULE: config.settings
+on: [push, pull_request]
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install flake8
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+      - name: Create flake8 config
+        run: |
+          cat << EOF > .flake8
+          [flake8]
+          max-line-length = 120
+          ignore = E203,E266,W503,E501,C901
+          exclude = .git,__pycache__,migrations,venv,.venv,env,.env,.github,scripts,docs,build,dist
+          EOF
+      - name: Run flake8
+        run: flake8 .
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt flake8
-      - name: Run flake8
-        run: flake8 . --config .flake8
-
-  test:
-    needs: lint
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: test
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - name: Install dependencies
-        run: |
           pip install -r requirements.txt
       - name: Run tests
-        env:
-          SECRET_KEY: 'django-insecure-test-key-123'
-          USE_SQLITE_FOR_TESTS: 'true'  # Принудительно используем SQLite
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          python manage.py migrate --noinput
-          python manage.py test habits.tests
+        run: python manage.py test
 
   build:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out code
+        uses: actions/checkout@v3
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Build and push
-        env:
-          SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
         run: |
-          docker build --build-arg SECRET_KEY=$SECRET_KEY -t ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} .
-          docker push ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+          echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+      - name: Build and push
+        run: |
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }} .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-
     steps:
-      - name: Setup SSH
+      - name: Validate secrets
         run: |
-          mkdir -p ~/.ssh
-          # Создаем файл ключа и удаляем возможные артефакты
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
+          echo "Docker Hub username is set: ${{ secrets.DOCKER_HUB_USERNAME != '' }}"
+          echo "Docker Hub token is set: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN != '' }}"
+          echo "SSH key is set: ${{ secrets.SSH_KEY != '' }}"
+          echo "SSH user: ${{ secrets.SSH_USER || 'NOT_SET' }}"
+          echo "Server IP: ${{ secrets.SERVER_IP || 'NOT_SET' }}"
 
-          # Проверка формата ключа (debug)
-          head -n 3 ~/.ssh/deploy_key
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
 
-          # Добавляем хост в known_hosts
-          ssh-keyscan ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-
-      - name: Debug SSH Key
+      - name: Test SSH connection
         run: |
-          ssh-keygen -l -f ~/.ssh/deploy_key
-          file ~/.ssh/deploy_key
+          echo "Testing connection to server..."
+          ssh -o ConnectTimeout=15 \
+              -o StrictHostKeyChecking=no \
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "echo 'Connection successful! Hostname: $(hostname)'"
 
       - name: Deploy to server
         run: |
@@ -115,5 +97,3 @@ jobs:
             ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
           echo "Deployment completed!"
           EOF
-
-
