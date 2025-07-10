@@ -100,13 +100,20 @@ jobs:
           ssh-keygen -l -f ~/.ssh/deploy_key
           file ~/.ssh/deploy_key
 
-      - name: Deploy
+      - name: Deploy to server
         run: |
-          ssh -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
-              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-              cd /путь/к/проекту && \  # ← Добавьте эту строку
-              docker-compose -f docker-compose.prod.yml up -d  # ← Явно укажите файл
-          "
+          ssh -o StrictHostKeyChecking=no \
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          echo "Starting deployment..."
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+          docker stop myapp || true
+          docker rm myapp || true
+          docker run -d \
+            --name myapp \
+            -p 80:8000 \
+            -e DJANGO_SETTINGS_MODULE=core.settings.production \
+            ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+          echo "Deployment completed!"
+          EOF
 
 
