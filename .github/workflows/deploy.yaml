@@ -85,16 +85,19 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          # Удаляем возможные символы \r (для Windows-формата)
-          sed -i 's/\r$//' ~/.ssh/deploy_key
+          # Создаем файл ключа и удаляем возможные артефакты
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+
+          # Проверка формата ключа (debug)
+          head -n 3 ~/.ssh/deploy_key
+
+          # Добавляем хост в known_hosts
           ssh-keyscan ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
       - name: Debug SSH Key
         run: |
-          ls -la ~/.ssh/
-          head -n 2 ~/.ssh/deploy_key
+          ssh-keygen -l -f ~/.ssh/deploy_key
           file ~/.ssh/deploy_key
 
       - name: Deploy
