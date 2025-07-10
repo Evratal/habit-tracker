@@ -85,21 +85,18 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          # Создаем файл ключа и чистим от возможных артефактов
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Debug SSH Key
-        run: |
+          # Проверка ключа (debug)
           ssh-keygen -l -f ~/.ssh/deploy_key
-          file ~/.ssh/deploy_key
+
+          # Добавляем хост в known_hosts
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
       - name: Test connection
-        run: |
-          ssh -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
-              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "whoami"    
-
+        run: ssh -i ~/.ssh/deploy_key -v ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "echo 'Success!'"
       - name: Deploy to server
         run: |
           ssh -o StrictHostKeyChecking=no \
