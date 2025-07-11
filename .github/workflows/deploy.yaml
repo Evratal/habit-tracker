@@ -122,6 +122,4 @@ jobs:
             sudo systemctl restart myapp.service
           EOF
       
-    
-
-
+      
