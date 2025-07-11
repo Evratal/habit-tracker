@@ -95,7 +95,7 @@ jobs:
         run: |
           # Копируем необходимые файлы
           scp -i ~/.ssh/deploy_key \
-              workflows/deploy.yaml \
+              E:\Python\New_year_of_study\habit_tracker_new\.github\workflows\deploy.yaml \
               ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:~/app/
 
           # Выполняем деплой
