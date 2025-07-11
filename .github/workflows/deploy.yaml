@@ -86,21 +86,8 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-
-          # Критически важные преобразования
-          sed -i 's/\r$//' ~/.ssh/deploy_key  # Удалить Windows-переносы
           chmod 600 ~/.ssh/deploy_key
-
-          # Проверка ключа
-          ssh-keygen -l -f ~/.ssh/deploy_key
-
-          # Жёсткая проверка подключения
-          ssh -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
-              -o PasswordAuthentication=no \
-              -o PreferredAuthentications=publickey \
-              -v \
-              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH Success!'"
+          ssh-keyscan ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
       - name: Deploy to server
         run: |
           ssh -o StrictHostKeyChecking=no \
