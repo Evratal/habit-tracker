@@ -95,7 +95,7 @@ jobs:
         run: |
           # Копируем необходимые файлы
           scp -i ~/.ssh/deploy_key \
-              deploy.yml \
+              deploy.yaml \
               ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:~/app/
 
           # Выполняем деплой
