@@ -16,7 +16,7 @@ WORKDIR /app
 
 # Оптимизация: сначала копируем только requirements.txt
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
     pip install gunicorn
 
 # Копирование всего проекта (с учетом .dockerignore)
