@@ -82,21 +82,26 @@ jobs:
     needs: test
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Copy project files to server
+      - name: Prepare target directory
         run: |
-          # Сначала создаём целевую директорию, если её нет
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
-            "mkdir -p ${{ secrets.DEPLOY_DIR }}"
+            "mkdir -p ${{ secrets.DEPLOY_DIR }} && \
+             ls -la $(dirname ${{ secrets.DEPLOY_DIR }})"
 
-          # Затем копируем файлы
+      - name: Copy project files
+        run: |
           rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
             --exclude '__pycache__' \
             --exclude '.git' \
+            --exclude '.github' \
+            --exclude '.env' \
             . \
             ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.DEPLOY_DIR }}
 
