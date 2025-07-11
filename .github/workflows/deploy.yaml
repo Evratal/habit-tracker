@@ -93,14 +93,22 @@ jobs:
 
       - name: Deploy
         run: |
+          # Копируем необходимые файлы
+          scp -i ~/.ssh/deploy_key \
+              docker-compose.yml \
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:~/app/
+
+          # Выполняем деплой
           ssh -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
               ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
               cd ~/app && \
+              echo 'Текущая директория:' && pwd && \
+              echo 'Файлы в директории:' && ls -la && \
               docker-compose down && \
-              docker-compose pull && \
-              docker-compose up -d --build
+              docker-compose up -d --build && \
+              echo 'Запущенные контейнеры:' && docker ps
           "
+      
     
 
 
