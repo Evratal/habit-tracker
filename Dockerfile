@@ -25,6 +25,7 @@ COPY . .
 RUN mkdir -p /app/staticfiles /app/media \
     && chown -R 1000:1000 /app/staticfiles /app/media \
     && chmod -R 755 /app/staticfiles /app/media
+    pip install gunicorn
 
 # Запуск миграций и сборки статики (опционально)
 RUN if [ "$COLLECTSTATIC" = "true" ]; then python manage.py collectstatic --noinput; fi
