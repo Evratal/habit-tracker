@@ -89,10 +89,16 @@ jobs:
 
       - name: Copy project files to server
         run: |
+          # Сначала создаём целевую директорию, если её нет
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
+            "mkdir -p ${{ secrets.DEPLOY_DIR }}"
+
+          # Затем копируем файлы
           rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
-              --exclude '__pycache__' \
-              . \
-              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.DEPLOY_DIR }}
+            --exclude '__pycache__' \
+            --exclude '.git' \
+            . \
+            ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.DEPLOY_DIR }}
 
       - name: Install dependencies on server
         run: |
