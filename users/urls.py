@@ -10,4 +10,3 @@ urlpatterns = [
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('users/link_telegram/', UserViewSet.as_view({'post': 'link_telegram'})),
 ]
-

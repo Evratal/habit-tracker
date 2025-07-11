@@ -1,10 +1,9 @@
-from rest_framework import viewsets, permissions,status
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import User
 from .serializers import UserRegistrationSerializer, CustomTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-
 
 
 class UserViewSet(viewsets.ModelViewSet):

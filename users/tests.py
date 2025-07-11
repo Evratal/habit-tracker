@@ -2,6 +2,7 @@ import pytest
 from django.test import TestCase
 from .models import User
 
+
 @pytest.mark.django_db
 class UserModelTest(TestCase):
     def test_create_user(self):

@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from users.models import User
 
+
 class Habit(models.Model):
     DAILY = 1
     WEEKLY = 7
@@ -52,7 +53,9 @@ class Habit(models.Model):
     )
     duration = models.PositiveIntegerField(
         validators=[MaxValueValidator(120)],
-        verbose_name='Время на выполнение (сек)'
+        verbose_name='Время на выполнение (сек)',
+        blank=True,
+        null=True
     )
     is_public = models.BooleanField(
         default=False,
