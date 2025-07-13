@@ -9,6 +9,6 @@ class TelegramBotConfig(AppConfig):
 
     def ready(self):
         # Запускаем бота при старте Django (только для production)
-        if not os.getenv('RUN_MAIN') == 'true':  # Чтобы не запускалось дважды в dev-режиме
+        if not os.environ.get('RUN_MAIN') and not os.environ.get('TESTING'):
             from .bot import setup_bot
             setup_bot()

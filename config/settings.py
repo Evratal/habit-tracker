@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
 
@@ -6,7 +7,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from django.conf.global_settings import AUTH_USER_MODEL, MEDIA_URL, MEDIA_ROOT
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'drf_yasg',
-    #'django_filters',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -75,6 +75,7 @@ DATABASES = {
         "PASSWORD": os.getenv("PASSWORD"),
         "HOST": os.getenv("HOST"),
         "PORT": os.getenv("PORT"),
+
     }
 }
 
@@ -114,10 +115,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.User"
 
 REST_FRAMEWORK = {
-#    "DEFAULT_FILTER_BACKENDS": [
-#        "django_filters.rest_framework.DjangoFilterBackend",
-#        "rest_framework.filters.OrderingFilter",
-#    ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
@@ -125,11 +122,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
 }
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True,
-}
+
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
@@ -147,12 +140,10 @@ SIMPLE_JWT = {
 
 STRIPE_API_KEY = 'pk_test_51RPsNqCDxK5UPEVDMEMkLe8OD9C4q26N8N20f3KjOrZWWWt9ddKa69z7M1EanA6rMdVmq2ojUj2UdRldmIwjXS3000KdMndaJJ'
 
-# settings.py
-
 # Настройки для Celery
 
 # URL-адрес брокера сообщений
-CELERY_BROKER_URL = 'redis://localhost:6379' # Например, Redis, который по умолчанию работает на порту 6379
+CELERY_BROKER_URL = 'redis://localhost:6379'  # Например, Redis, который по умолчанию работает на порту 6379
 
 # URL-адрес брокера результатов, также Redis
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
@@ -174,12 +165,17 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-
 # Настройки CORS
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') or [
+CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+]
+
 # Разрешить передачу cookies через CORS
 CORS_ALLOW_CREDENTIALS = True
 
@@ -206,16 +202,6 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
-
-CORS_ALLOWED_ORIGINS = ["https://your-frontend.com"]
-CORS_ALLOW_CREDENTIALS = True
-
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # URL брокера (Redis)
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # Хранение результатов
-CELERY_TIMEZONE = 'Europe/Moscow'  # Часовой пояс
-
-
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
@@ -223,3 +209,17 @@ AUTHENTICATION_BACKENDS = [
 # Telegram
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_WEBHOOK_URL = os.getenv('TELEGRAM_WEBHOOK_URL', '')
+
+TESTING = 'test' in sys.argv
+
+if TESTING:
+    TELEGRAM_BOT_TOKEN = None  # Отключаем бота для тестов
+
+if 'test' in sys.argv or os.getenv('USE_SQLITE_FOR_TESTS'):
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(os.path.dirname(__file__), 'db.sqlite3') if 'test' not in sys.argv else ':memory:'
+    }
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
